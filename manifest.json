@@ -1,0 +1,17 @@
+{
+  "name": "DRC Social Issues Survey",
+  "short_name": "DRC Survey",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#0b1220",
+  "theme_color": "#0b1220",
+  "description": "Multilingual DRC social issues survey (Firestore).",
+  "icons": [
+    {
+      "src": "https://www.gstatic.com/mobilesdk/160503_mobilesdk/logo/2x/firebase_96dp.png",
+      "sizes": "96x96",
+      "type": "image/png"
+    }
+  ]
+}
