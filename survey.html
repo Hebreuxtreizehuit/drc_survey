@@ -1,0 +1,958 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>DRC Social Issues Survey</title>
+  <link rel="icon" href="./icons/icon-192.png">
+  <link rel="apple-touch-icon" href="./icons/icon-192.png">
+
+
+  <!-- PWA -->
+  <link rel="manifest" href="./manifest.json" />
+  <meta name="theme-color" content="#0b1220" />
+  <meta name="color-scheme" content="dark light" />
+
+  <style>
+    :root{
+      --bg:#0b1220; --muted:#97a8cf; --text:#eaf0ff;
+      --accent:#4f8cff; --accent2:#38d1a3; --danger:#ff5c7a;
+      --border:rgba(255,255,255,.10);
+      --shadow: 0 18px 60px rgba(0,0,0,.35);
+      --radius:18px; --tap:56px;
+    }
+
+    *{box-sizing:border-box}
+    html{ color-scheme: dark; } /* helps native dropdowns */
+    body{
+      margin:0;
+      font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+      background: radial-gradient(1200px 600px at 20% 0%, rgba(79,140,255,.25), transparent 60%),
+                  radial-gradient(1000px 500px at 80% 10%, rgba(56,209,163,.18), transparent 55%),
+                  var(--bg);
+      color:var(--text);
+      min-height:100vh;
+      display:flex;
+      justify-content:center;
+      padding:18px;
+    }
+
+    .app{ width:min(820px, 100%); display:flex; flex-direction:column; gap:14px; }
+    .topbar{ display:flex; align-items:flex-start; justify-content:space-between; gap:12px; flex-wrap:wrap; }
+    .brand{ display:flex; flex-direction:column; gap:4px; }
+    .brand h1{ margin:0; font-size:18px; font-weight:800; letter-spacing:.2px; }
+    .brand p{ margin:0; color:var(--muted); font-size:13px; line-height:1.35; }
+
+    .pillrow{ display:flex; flex-wrap:wrap; gap:8px; justify-content:flex-end; align-items:center; }
+    .pill{
+      border:1px solid var(--border);
+      background:rgba(255,255,255,.04);
+      color:var(--text);
+      padding:8px 10px;
+      border-radius:999px;
+      font-size:12px;
+      display:flex;
+      align-items:center;
+      gap:8px;
+      user-select:none;
+    }
+    .dot{ width:8px;height:8px;border-radius:50%; background:var(--accent2); box-shadow:0 0 0 6px rgba(56,209,163,.14); }
+
+    .btnTiny{
+      border:1px solid var(--border);
+      background:rgba(255,255,255,.04);
+      color:var(--text);
+      border-radius:999px;
+      padding:8px 10px;
+      font-size:12px;
+      cursor:pointer;
+    }
+
+    /* ✅ FIX: dropdown list options invisible on white menu background */
+    select{
+      width:100%;
+      border:1px solid var(--border);
+      background: rgba(255,255,255,.04);
+      color: var(--text);
+      border-radius:14px;
+      padding:12px 12px;
+      min-height: var(--tap);
+      font-size:14px;
+      outline:none;
+
+      /* helps some browsers render native controls dark */
+      color-scheme: dark;
+    }
+
+    /* These make the dropdown items readable in Chrome/Windows */
+    select option{
+      background-color: #ffffff; /* safe: many browsers use white list */
+      color: #0b1220;           /* dark text so it's visible */
+    }
+    /* When an option is selected/highlighted */
+    select option:checked,
+    select option:hover{
+      background-color: #dbe7ff;
+      color: #0b1220;
+    }
+
+    textarea, input[type="text"]{
+      width:100%;
+      border:1px solid var(--border);
+      background: rgba(255,255,255,.04);
+      color:var(--text);
+      border-radius:14px;
+      padding:12px 12px;
+      min-height: var(--tap);
+      font-size:14px;
+      outline:none;
+    }
+    textarea{ min-height: 120px; resize: vertical; }
+
+    .card{
+      background: linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,.03));
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      overflow:hidden;
+    }
+    .progressWrap{ padding:14px 14px 0 14px; }
+    .progressMeta{
+      display:flex; justify-content:space-between; align-items:center; gap:10px;
+      color:var(--muted); font-size:12px; margin-bottom:8px;
+    }
+    .bar{
+      width:100%; height:10px; background: rgba(255,255,255,.08);
+      border-radius: 999px; overflow:hidden; border:1px solid rgba(255,255,255,.10);
+    }
+    .bar > div{
+      height:100%; width:0%;
+      background: linear-gradient(90deg, var(--accent), var(--accent2));
+      border-radius: 999px; transition: width .35s ease;
+    }
+
+    .content{ padding:16px 14px 14px 14px; }
+    .qTitle{ font-size:18px; margin:0 0 6px 0; font-weight:800; }
+    .qHint{ margin:0 0 14px 0; color:var(--muted); font-size:13px; line-height:1.35; }
+
+    .options{ display:flex; flex-direction:column; gap:10px; margin-bottom:10px; }
+    label.opt{
+      display:flex; align-items:center; gap:10px;
+      padding:12px 12px;
+      border:1px solid var(--border);
+      border-radius: 14px;
+      background: rgba(255,255,255,.04);
+      min-height: var(--tap);
+      cursor:pointer;
+    }
+    input[type="radio"], input[type="checkbox"]{ width:20px; height:20px; accent-color: var(--accent); }
+
+    .ratingRow{ display:flex; gap:10px; flex-wrap:wrap; }
+    .ratingBtn{
+      border:1px solid var(--border);
+      background: rgba(255,255,255,.04);
+      color:var(--text);
+      border-radius: 14px;
+      min-height: var(--tap);
+      min-width: var(--tap);
+      padding:0 14px;
+      font-weight:800;
+      cursor:pointer;
+    }
+    .ratingBtn.selected{
+      border-color: rgba(56,209,163,.75);
+      box-shadow: 0 0 0 4px rgba(56,209,163,.18);
+      background: rgba(56,209,163,.12);
+    }
+
+    .footer{
+      display:flex; gap:10px; padding:14px;
+      border-top: 1px solid var(--border);
+      background: rgba(0,0,0,.12);
+      flex-wrap:wrap;
+    }
+    .btn{
+      border:none;
+      border-radius: 14px;
+      min-height: var(--tap);
+      padding: 0 14px;
+      font-weight:800;
+      cursor:pointer;
+      color:var(--text);
+      background: rgba(255,255,255,.08);
+      border:1px solid var(--border);
+      flex:1;
+    }
+    .btn.primary{
+      background: linear-gradient(90deg, var(--accent), var(--accent2));
+      border:none;
+      color:#06101f;
+    }
+    .btn.danger{
+      background: rgba(255,92,122,.12);
+      border:1px solid rgba(255,92,122,.45);
+      color:#ffd6de;
+      flex:unset;
+    }
+    .btn:disabled{ opacity:.45; cursor:not-allowed; }
+
+    .toast{
+      position:fixed;
+      left:50%; bottom:18px; transform:translateX(-50%);
+      background: rgba(10,16,28,.92);
+      border: 1px solid var(--border);
+      color: var(--text);
+      padding:10px 12px;
+      border-radius: 999px;
+      font-size: 12px;
+      box-shadow: var(--shadow);
+      display:none;
+      max-width:min(780px, calc(100% - 24px));
+      text-align:center;
+      z-index: 99;
+    }
+
+    .summary{ padding:16px 14px 14px 14px; }
+    pre{
+      background: rgba(255,255,255,.04);
+      border:1px solid var(--border);
+      padding:12px;
+      border-radius:14px;
+      overflow:auto;
+      max-height: 320px;
+      font-size:12px;
+      color: #d9e7ff;
+    }
+    .warn{
+      border:1px solid rgba(255,92,122,.45);
+      background: rgba(255,92,122,.08);
+      color:#ffd6de;
+      padding:10px 12px;
+      border-radius:14px;
+      font-size:12px;
+      margin: 10px 0 0 0;
+      line-height:1.35;
+      display:none;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="app">
+    <div class="topbar">
+      <div class="brand">
+        <h1 id="appTitle">DRC Social Issues Survey</h1>
+        <p id="appSub">Multilingual • Mobile-first • Saves to Firebase Firestore</p>
+      </div>
+
+      <div class="pillrow">
+        <select id="langSelect" class="btnTiny" style="padding:8px 10px; min-height:auto;">
+          <option value="en">EN • English</option>
+          <option value="fr">FR • Français</option>
+          <option value="sw">SW • Kiswahili</option>
+          <option value="ln">LN • Lingala</option>
+          <option value="kg">KG • Kikongo</option>
+          <option value="lua">LUA • Tshiluba</option>
+        </select>
+
+        <div class="pill"><span class="dot"></span><span id="netState">Online</span></div>
+        <div class="pill"><span id="answeredCount">0</span>/<span id="totalCount">0</span></div>
+      </div>
+    </div>
+
+    <div class="card" id="surveyCard">
+      <div class="progressWrap">
+        <div class="progressMeta">
+          <span id="stepLabel">Question</span>
+          <span id="percentLabel">0%</span>
+        </div>
+        <div class="bar"><div id="progressBar"></div></div>
+      </div>
+
+      <div class="content" id="content"></div>
+
+      <div class="footer">
+        <button class="btn danger" id="resetBtn" type="button">Reset</button>
+        <button class="btn" id="backBtn" type="button">Back</button>
+        <button class="btn primary" id="nextBtn" type="button">Next</button>
+      </div>
+    </div>
+
+    <div class="card" id="summaryCard" style="display:none;">
+      <div class="summary">
+        <h2 id="doneTitle">✅ Thank you!</h2>
+        <div id="doneMsg" style="color:var(--muted); font-size:13px;">Your response has been submitted.</div>
+
+        <div class="warn" id="warnBox"></div>
+
+        <div style="color:var(--muted); font-size:12px; margin-top:12px;">Submission payload (local copy):</div>
+        <pre id="jsonOut"></pre>
+
+        <div style="display:flex; gap:10px; flex-wrap:wrap; margin-top:12px;">
+          <button class="btn primary" id="restartBtn" type="button">New Response</button>
+          <button class="btn" id="downloadBtn" type="button">Download JSON</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="toast" id="toast"></div>
+
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-app.js";
+    import { getFirestore, collection, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyD6kMkeR0-JtTzouP80e6m6AW__be9AkDA",
+      authDomain: "drc-survey-a51d4.firebaseapp.com",
+      projectId: "drc-survey-a51d4",
+      storageBucket: "drc-survey-a51d4.firebasestorage.app",
+      messagingSenderId: "332703549686",
+      appId: "1:332703549686:web:ad60fa3bdc932b106a84d7"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+
+    const I18N = {
+      en: {
+        title:"DRC Social Issues Survey",
+        sub:"Multilingual • Mobile-first • Saves to Firebase Firestore",
+        online:"Online", offline:"Offline",
+        reset:"Reset", back:"Back", next:"Next", finish:"Submit",
+        required:"required",
+        qOf:(i,t)=>`Question ${i} of ${t}`,
+        mustAnswer:"Please answer before continuing.",
+        sending:"Submitting…",
+        sent:(id)=>`Submitted ✅ (ID: ${id})`,
+        thankYou:"✅ Thank you!",
+        doneMsg:"Your response has been submitted.",
+        warnFail:"Submission failed. Check Firestore rules and console.",
+        warnOffline:"You are offline. Payload saved locally only.",
+        select:"Select…",
+        confirmReset:"Reset and clear saved answers?",
+        maxPick:(n)=>`Select up to ${n}.`
+      },
+      fr: {
+        title:"Enquête RDC – Problèmes sociaux",
+        sub:"Multilingue • Mobile • Enregistrement via Firebase Firestore",
+        online:"En ligne", offline:"Hors ligne",
+        reset:"Réinitialiser", back:"Retour", next:"Suivant", finish:"Envoyer",
+        required:"obligatoire",
+        qOf:(i,t)=>`Question ${i} sur ${t}`,
+        mustAnswer:"Veuillez répondre avant de continuer.",
+        sending:"Envoi…",
+        sent:(id)=>`Envoyé ✅ (ID : ${id})`,
+        thankYou:"✅ Merci !",
+        doneMsg:"Votre réponse a été envoyée.",
+        warnFail:"Échec de l’envoi. Vérifiez les règles Firestore et la console.",
+        warnOffline:"Vous êtes hors ligne. Données enregistrées localement seulement.",
+        select:"Sélectionner…",
+        confirmReset:"Réinitialiser et effacer les réponses enregistrées ?",
+        maxPick:(n)=>`Sélectionnez au maximum ${n}.`
+      },
+      sw: {
+        title:"Utafiti wa Masuala ya Kijamii – DRC",
+        sub:"Lugha nyingi • Rafiki kwa simu • Huhifadhi kwenye Firebase Firestore",
+        online:"Mtandaoni", offline:"Nje ya mtandao",
+        reset:"Anza upya", back:"Rudi", next:"Endelea", finish:"Tuma",
+        required:"inahitajika",
+        qOf:(i,t)=>`Swali ${i} kati ya ${t}`,
+        mustAnswer:"Tafadhali jibu kabla ya kuendelea.",
+        sending:"Inatuma…",
+        sent:(id)=>`Imetumwa ✅ (ID: ${id})`,
+        thankYou:"✅ Asante!",
+        doneMsg:"Jibu lako limetumwa.",
+        warnFail:"Imeshindikana kutuma. Angalia Firestore rules na Console.",
+        warnOffline:"Uko nje ya mtandao. Data imehifadhiwa kwenye kifaa tu.",
+        select:"Chagua…",
+        confirmReset:"Anza upya na ufute majibu yaliyohifadhiwa?",
+        maxPick:(n)=>`Chagua hadi ${n}.`
+      },
+      ln: {
+        title:"Anketi ya Makambo ya Bomoi – RDC",
+        sub:"Minɔkɔ ebele • Ya telefone • Ebombami na Firebase Firestore",
+        online:"Na internet", offline:"Libanda ya internet",
+        reset:"Bandela lisusu", back:"Zonga", next:"Landá", finish:"Tinda",
+        required:"esengeli",
+        qOf:(i,t)=>`Motuna ${i} na ${t}`,
+        mustAnswer:"Svp yanola liboso ya kokende liboso.",
+        sending:"Ezali kotinda…",
+        sent:(id)=>`Etindami ✅ (ID: ${id})`,
+        thankYou:"✅ Matondo!",
+        doneMsg:"Eyano na yo etindami.",
+        warnFail:"Etindeli epanzani te. Tala Firestore rules mpe Console.",
+        warnOffline:"Ozali libanda ya internet. Data ebombami kaka na aparɛyi.",
+        select:"Pona…",
+        confirmReset:"Kobanda lisusu mpe kolongola biyano oyo ebombami?",
+        maxPick:(n)=>`Pona kino ${n}.`
+      },
+      kg: {
+        title:"Kintwadi kia Mambu ma Bantu – RDC",
+        sub:"Ndinga mingi • Ya telefone • Kubumba na Firebase Firestore",
+        online:"Na internet", offline:"Kansi internet",
+        reset:"Bandila diaka", back:"Vutuka", next:"Landakana", finish:"Tinda",
+        required:"kisadi",
+        qOf:(i,t)=>`Mambu ${i} na ${t}`,
+        mustAnswer:"Svp, vutula ntete yina me landa.",
+        sending:"Ke tinda…",
+        sent:(id)=>`Me tindama ✅ (ID: ${id})`,
+        thankYou:"✅ Matondo!",
+        doneMsg:"Mvutu na nge me tindama.",
+        warnFail:"Kutinda me buba. Tala Firestore rules mpe Console.",
+        warnOffline:"Nge kele kansi internet. Data me bumbama kaka na appareil.",
+        select:"Pona…",
+        confirmReset:"Bandila diaka mpe longa mvutu yina me bumbama?",
+        maxPick:(n)=>`Pona tii ${n}.`
+      },
+      lua: {
+        title:"Bulongolodi bwa Mambu a Bupole – RDC",
+        sub:"Miakulu mingi • Ya telefone • Kubikila mu Firebase Firestore",
+        online:"Ku internet", offline:"Padi internet",
+        reset:"Tanga kabidi", back:"Bwela", next:"Londa", finish:"Tuma",
+        required:"kuyidi",
+        qOf:(i,t)=>`Mubuzo ${i} wa ${t}`,
+        mustAnswer:"Nsumwinu, panga eyano kumpala wa kulonda.",
+        sending:"Kutuma…",
+        sent:(id)=>`Kutumwe ✅ (ID: ${id})`,
+        thankYou:"✅ Twayi!",
+        doneMsg:"Eyano wenu watumwe.",
+        warnFail:"Kutuma kwapandamene. Tala Firestore rules ne Console.",
+        warnOffline:"Udi padi internet. Data ibikidi mu aparɛyi kaka.",
+        select:"Pona…",
+        confirmReset:"Tanga kabidi ne longa biyano bini me bumbama?",
+        maxPick:(n)=>`Pona too ne ${n}.`
+      }
+    };
+
+    const SURVEY = {
+      id: "drc_social_issues_v1",
+      questions: [
+        {
+          id:"consent", type:"single", required:true,
+          title:{
+            en:"Do you agree to participate in this anonymous survey?",
+            fr:"Acceptez-vous de participer à cette enquête anonyme ?",
+            sw:"Je, unakubali kushiriki katika utafiti huu usiojulikana?",
+            ln:"Ondimi kosangana na anketi oyo ya kozanga kombo?",
+            kg:"Nge me ndima kusala na kintwadi yai ya kuzanga zina?",
+            lua:"Udi uvuma kushala mu bulongolodi ebu bwa kuzanga dina?"
+          },
+          hint:{
+            en:"No names required. You can stop anytime.",
+            fr:"Aucun nom requis. Vous pouvez arrêter à tout moment.",
+            sw:"Hakuna majina yanayohitajika. Unaweza kusitisha wakati wowote.",
+            ln:"Kombo esengeli te. Okoki kotika tango nyonso.",
+            kg:"Zina kele ve. Nge lenda kanga ntangu yonso.",
+            lua:"Dina didi te. Udi mua kuleka tango yonso."
+          },
+          options:{
+            en:["Yes, I agree","No"],
+            fr:["Oui, j’accepte","Non"],
+            sw:["Ndiyo, nakubali","Hapana"],
+            ln:["Iyo, nandimi","Te"],
+            kg:["Ee, nandimi","Ve"],
+            lua:["Eyo, ndi uvuma","To"]
+          }
+        },
+
+        {
+          id:"province", type:"select", required:true,
+          title:{
+            en:"Which province are you responding from?",
+            fr:"De quelle province répondez-vous ?",
+            sw:"Unajibu kutoka jimbo gani?",
+            ln:"Ozali koyanola wapi (province)?",
+            kg:"Nge ke vutula na province yina?",
+            lua:"Udi uvutula wapi (province)?"
+          },
+          hint:{
+            en:"Select the closest option.",
+            fr:"Sélectionnez l’option la plus proche.",
+            sw:"Chagua chaguo lililo karibu zaidi.",
+            ln:"Pona oyo ezali pene.",
+            kg:"Pona yina kele pene.",
+            lua:"Pona oyo udi pabuipi."
+          },
+          options:{
+            en:["Kinshasa","Kongo Central","Kwango","Kwilu","Mai-Ndombe","Équateur","Mongala","Nord-Ubangi","Sud-Ubangi","Tshuapa",
+                "Kasaï","Kasaï-Central","Kasaï-Oriental","Lomami","Sankuru",
+                "Haut-Katanga","Haut-Lomami","Lualaba","Tanganyika",
+                "Nord-Kivu","Sud-Kivu","Ituri","Haut-Uele","Bas-Uele","Tshopo","Maniema",
+                "Other / Prefer not to say"],
+            fr:["Kinshasa","Kongo Central","Kwango","Kwilu","Mai-Ndombe","Équateur","Mongala","Nord-Ubangi","Sud-Ubangi","Tshuapa",
+                "Kasaï","Kasaï-Central","Kasaï-Oriental","Lomami","Sankuru",
+                "Haut-Katanga","Haut-Lomami","Lualaba","Tanganyika",
+                "Nord-Kivu","Sud-Kivu","Ituri","Haut-Uele","Bas-Uele","Tshopo","Maniema",
+                "Autre / Je préfère ne pas dire"],
+            sw:["Kinshasa","Kongo Central","Kwango","Kwilu","Mai-Ndombe","Équateur","Mongala","Nord-Ubangi","Sud-Ubangi","Tshuapa",
+                "Kasaï","Kasaï-Central","Kasaï-Oriental","Lomami","Sankuru",
+                "Haut-Katanga","Haut-Lomami","Lualaba","Tanganyika",
+                "Nord-Kivu","Sud-Kivu","Ituri","Haut-Uele","Bas-Uele","Tshopo","Maniema",
+                "Nyingine / Sitaki kusema"],
+            ln:["Kinshasa","Kongo Central","Kwango","Kwilu","Mai-Ndombe","Équateur","Mongala","Nord-Ubangi","Sud-Ubangi","Tshuapa",
+                "Kasaï","Kasaï-Central","Kasaï-Oriental","Lomami","Sankuru",
+                "Haut-Katanga","Haut-Lomami","Lualaba","Tanganyika",
+                "Nord-Kivu","Sud-Kivu","Ituri","Haut-Uele","Bas-Uele","Tshopo","Maniema",
+                "Mosusu / Nalingi koloba te"],
+            kg:["Kinshasa","Kongo Central","Kwango","Kwilu","Mai-Ndombe","Équateur","Mongala","Nord-Ubangi","Sud-Ubangi","Tshuapa",
+                "Kasaï","Kasaï-Central","Kasaï-Oriental","Lomami","Sankuru",
+                "Haut-Katanga","Haut-Lomami","Lualaba","Tanganyika",
+                "Nord-Kivu","Sud-Kivu","Ituri","Haut-Uele","Bas-Uele","Tshopo","Maniema",
+                "Mosusu / Nge ke zola ve kusonga"],
+            lua:["Kinshasa","Kongo Central","Kwango","Kwilu","Mai-Ndombe","Équateur","Mongala","Nord-Ubangi","Sud-Ubangi","Tshuapa",
+                "Kasaï","Kasaï-Central","Kasaï-Oriental","Lomami","Sankuru",
+                "Haut-Katanga","Haut-Lomami","Lualaba","Tanganyika",
+                "Nord-Kivu","Sud-Kivu","Ituri","Haut-Uele","Bas-Uele","Tshopo","Maniema",
+                "Bimue / Ndi padi kuloba"]
+          }
+        },
+
+        {
+          id:"area", type:"single", required:true,
+          title:{ en:"Is your area mostly…", fr:"Votre zone est plutôt…", sw:"Eneo lako ni zaidi…", ln:"Esika olingi ezali mingi…", kg:"Nsi na nge kele mingi…", lua:"Ntooto wenu udi mingi…" },
+          hint:{ en:"Choose one option.", fr:"Choisissez une option.", sw:"Chagua moja.", ln:"Pona moko.", kg:"Pona mosi.", lua:"Pona mosi." },
+          options:{
+            en:["Urban","Peri-urban","Rural"],
+            fr:["Urbaine","Périurbaine","Rurale"],
+            sw:["Mijini","Pembezoni mwa mji","Vijijini"],
+            ln:["Na engumba","Pembeni ya engumba","Na mboka"],
+            kg:["Na engumba","Pene ya engumba","Na mboka"],
+            lua:["Mu ville","Pabuipi na ville","Mu byalo"]
+          }
+        },
+
+        {
+          id:"age_group", type:"single", required:true,
+          title:{ en:"Age group", fr:"Tranche d’âge", sw:"Kundi la umri", ln:"Lisanga ya mibu", kg:"Bundu ya mvu", lua:"Kipimu kia myaka" },
+          hint:{ en:"Choose one.", fr:"Choisissez une option.", sw:"Chagua moja.", ln:"Pona moko.", kg:"Pona mosi.", lua:"Pona mosi." },
+          options:{
+            en:["Under 18","18–24","25–34","35–44","45–54","55+"],
+            fr:["Moins de 18","18–24","25–34","35–44","45–54","55+"],
+            sw:["Chini ya 18","18–24","25–34","35–44","45–54","55+"],
+            ln:["Na se ya 18","18–24","25–34","35–44","45–54","55+"],
+            kg:["Na nsi ya 18","18–24","25–34","35–44","45–54","55+"],
+            lua:["Pantsi pa 18","18–24","25–34","35–44","45–54","55+"]
+          }
+        },
+
+        { id:"edu_access", type:"rating", required:true, max:5,
+          title:{ en:"Education: how accessible is quality schooling in your area?", fr:"Éducation : l’accès à une scolarité de qualité dans votre zone ?", sw:"Elimu: upatikanaji wa shule bora katika eneo lako ukoje?", ln:"Mateya: ndenge nini koleka na kelasi ya malamu na esika na yo?", kg:"Zonzila: bika ya sikulu ya mbote na nsi na nge kele ndenge nini?", lua:"Mfundilu: dibika dia shule ya malamu didi bule?" },
+          hint:{ en:"1 = very poor, 5 = very good", fr:"1 = très mauvais, 5 = très bon", sw:"1 = mbaya sana, 5 = nzuri sana", ln:"1 = mabe mingi, 5 = malamu mingi", kg:"1 = mbimbi mingi, 5 = mbote mingi", lua:"1 = bubi bikole, 5 = bimpe bikole" }
+        },
+
+        { id:"health_access", type:"rating", required:true, max:5,
+          title:{ en:"Health: access to clinics/medicines when needed?", fr:"Santé : accès aux soins/médicaments quand nécessaire ?", sw:"Afya: kupata kliniki/dawa unapohitaji ni rahisi?", ln:"Bokolongono: okoki kozwa lopitalo to nkisi tango osengeli?", kg:"Buzingu: nge lenda fumana lopitalo/nkisi ntangu nge ke zola?", lua:"Bukole: udi mua kupata lopitalo/nkisi pa udi usengela?" },
+          hint:{ en:"1 = very difficult, 5 = very easy", fr:"1 = très difficile, 5 = très facile", sw:"1 = vigumu sana, 5 = rahisi sana", ln:"1 = mpasi mingi, 5 = pete mingi", kg:"1 = mpasi mingi, 5 = pete mingi", lua:"1 = mpasi bikole, 5 = pete bikole" }
+        },
+
+        { id:"water_access", type:"rating", required:true, max:5,
+          title:{ en:"Water & sanitation: availability of safe water?", fr:"Eau & assainissement : disponibilité d’une eau potable ?", sw:"Maji & usafi: upatikanaji wa maji salama ukoje?", ln:"Mai & bopeto: mai ya malamu ezali ndenge nini?", kg:"Maza & bunene: maza ya mbote kele bule?", lua:"Meyi & busafi: meyi a malamu adi bule?" },
+          hint:{ en:"1 = very poor, 5 = very good", fr:"1 = très mauvais, 5 = très bon", sw:"1 = mbaya sana, 5 = nzuri sana", ln:"1 = mabe mingi, 5 = malamu mingi", kg:"1 = mbimbi mingi, 5 = mbote mingi", lua:"1 = bubi bikole, 5 = bimpe bikole" }
+        },
+
+        { id:"security", type:"rating", required:true, max:5,
+          title:{ en:"Security: how safe do you feel day-to-day?", fr:"Sécurité : à quel point vous sentez-vous en sécurité au quotidien ?", sw:"Usalama: unajisikia salama kiasi gani kila siku?", ln:"Kimia: omonaka kimia ndenge nini mokolo na mokolo?", kg:"Kimia: nge ke yindula nge kele na kimia bule bilumbu nyonso?", lua:"Kimia: udi wumfwa mu kimia bule mu dituku dia mikolo?" },
+          hint:{ en:"1 = not safe, 5 = very safe", fr:"1 = pas en sécurité, 5 = très en sécurité", sw:"1 = si salama, 5 = salama sana", ln:"1 = kimia te, 5 = kimia mingi", kg:"1 = kimia ve, 5 = kimia mingi", lua:"1 = kimia to, 5 = kimia bikole" }
+        },
+
+        { id:"top_priorities", type:"multi", required:true, maxPick:3,
+          title:{ en:"Top 3 priorities for your community", fr:"Top 3 priorités pour votre communauté", sw:"Vipaumbele 3 vya juu kwa jamii yako", ln:"Makambo 3 ya liboso mpo na communauté na yo", kg:"Mambu 3 ya ntete mu bantu na nge", lua:"Bintu 3 bya kumpala mu ditunga dienu" },
+          hint:{ en:"Select up to 3.", fr:"Sélectionnez jusqu’à 3.", sw:"Chagua hadi 3.", ln:"Pona kino 3.", kg:"Pona tii 3.", lua:"Pona too ne 3." },
+          options:{
+            en:["Education","Health","Jobs & livelihoods","Roads & transport","Water & sanitation","Security","Electricity","Governance / corruption","Agriculture support","Other"],
+            fr:["Éducation","Santé","Emplois & moyens de subsistance","Routes & transport","Eau & assainissement","Sécurité","Électricité","Gouvernance / corruption","Soutien à l’agriculture","Autre"],
+            sw:["Elimu","Afya","Ajira & kipato","Barabara & usafiri","Maji & usafi","Usalama","Umeme","Utawala / rushwa","Msaada wa kilimo","Nyingine"],
+            ln:["Mateya","Bokolongono","Misala & bomoi","Banzela & transport","Mai & bopeto","Kimia","Electricité","Boyangeli / corruption","Lisungi ya bilanga","Mosusu"],
+            kg:["Zonzila","Buzingu","Misala & bomoi","Banzila & transport","Maza & bunene","Kimia","Muenza (umeme)","Boyangeli / corruption","Lisungi ya bilanga","Mosusu"],
+            lua:["Mfundilu","Bukole","Misala & bupile","Banzila & transport","Meyi & busafi","Kimia","Kalasa (umeme)","Boyangeli / corruption","Lisungi lya bilanga","Bimue"]
+          }
+        },
+
+        { id:"open_comment", type:"textarea", required:false,
+          title:{ en:"Any additional comment or suggestion?", fr:"Autre commentaire ou suggestion ?", sw:"Una maoni au pendekezo la ziada?", ln:"Ozali na commentaire to makanisi mosusu?", kg:"Nge kele na mambu mosi ya kusonga to ya kunata?", lua:"Udi ne mambu makuabu anyi nsongelu?" },
+          hint:{ en:"Optional. Avoid private details.", fr:"Optionnel. Évitez les détails personnels.", sw:"Si lazima. Epuka taarifa binafsi.", ln:"Ya kopona. Koboya makambo ya privé.", kg:"Kikadilu. Bika mambu ya privé.", lua:"Ka nkudimu. Koboya mawu a privé." },
+          placeholder:{ en:"Type here…", fr:"Écrivez ici…", sw:"Andika hapa…", ln:"Koma awa…", kg:"Sonika awa…", lua:"Koma apa…" }
+        }
+      ]
+    };
+
+    const STORAGE_KEY = "survey_state::" + SURVEY.id;
+    const LANG_KEY = "survey_lang";
+    const SUPPORTED_LANGS = ["en","fr","sw","ln","kg","lua"];
+
+    let lang = localStorage.getItem(LANG_KEY) || "en";
+    if(!SUPPORTED_LANGS.includes(lang)) lang = "en";
+
+    let state = { step:0, answers:{}, startedAt:new Date().toISOString(), completedAt:null };
+
+    function loadState(){
+      try{
+        const raw = localStorage.getItem(STORAGE_KEY);
+        if(!raw) return;
+        const parsed = JSON.parse(raw);
+        if(parsed && parsed.answers && typeof parsed.step === "number") state = parsed;
+      }catch(e){}
+    }
+    function saveState(){ localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); }
+    function clearState(){ localStorage.removeItem(STORAGE_KEY); }
+
+    const contentEl = document.getElementById("content");
+    const backBtn = document.getElementById("backBtn");
+    const nextBtn = document.getElementById("nextBtn");
+    const resetBtn = document.getElementById("resetBtn");
+    const stepLabel = document.getElementById("stepLabel");
+    const percentLabel = document.getElementById("percentLabel");
+    const progressBar = document.getElementById("progressBar");
+    const answeredCount = document.getElementById("answeredCount");
+    const totalCount = document.getElementById("totalCount");
+    const surveyCard = document.getElementById("surveyCard");
+    const summaryCard = document.getElementById("summaryCard");
+    const jsonOut = document.getElementById("jsonOut");
+    const downloadBtn = document.getElementById("downloadBtn");
+    const restartBtn = document.getElementById("restartBtn");
+    const toast = document.getElementById("toast");
+    const langSelect = document.getElementById("langSelect");
+    const netState = document.getElementById("netState");
+    const appTitle = document.getElementById("appTitle");
+    const appSub = document.getElementById("appSub");
+    const doneTitle = document.getElementById("doneTitle");
+    const doneMsg = document.getElementById("doneMsg");
+    const warnBox = document.getElementById("warnBox");
+
+    totalCount.textContent = String(SURVEY.questions.length);
+
+    function t(key, ...args){
+      const pack = I18N[lang] || I18N.en;
+      const v = pack[key] ?? I18N.en[key];
+      return typeof v === "function" ? v(...args) : v;
+    }
+
+    function flash(msg){
+      toast.textContent = msg;
+      toast.style.display = "block";
+      clearTimeout(flash._t);
+      flash._t = setTimeout(()=> toast.style.display="none", 1100);
+    }
+
+    function setNetworkBadge(){
+      netState.textContent = navigator.onLine ? t("online") : t("offline");
+    }
+    window.addEventListener("online", setNetworkBadge);
+    window.addEventListener("offline", setNetworkBadge);
+
+    function applyLang(){
+      localStorage.setItem(LANG_KEY, lang);
+      langSelect.value = lang;
+      document.documentElement.lang = lang;
+
+      appTitle.textContent = (I18N[lang] || I18N.en).title;
+      appSub.textContent = (I18N[lang] || I18N.en).sub;
+      resetBtn.textContent = t("reset");
+      backBtn.textContent = t("back");
+      doneTitle.textContent = t("thankYou");
+      doneMsg.textContent = t("doneMsg");
+
+      setNetworkBadge();
+      render();
+    }
+
+    function escapeHtml(s){
+      return String(s).replace(/[&<>"']/g, c => ({
+        "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"
+      }[c]));
+    }
+    function escapeAttr(s){ return escapeHtml(s).replace(/`/g, "&#96;"); }
+
+    function qText(obj){
+      return obj?.[lang] ?? obj?.en ?? "";
+    }
+    function qOptions(q){
+      return (q.options?.[lang] ?? q.options?.en ?? []);
+    }
+
+    function updateProgress(){
+      const total = SURVEY.questions.length;
+      const idx = state.step;
+      const pct = Math.round((idx / total) * 100);
+
+      progressBar.style.width = pct + "%";
+      percentLabel.textContent = pct + "%";
+      stepLabel.textContent = t("qOf", idx+1, total);
+
+      let c = 0;
+      for(const q of SURVEY.questions){
+        const v = state.answers[q.id];
+        if(q.type==="multi"){ if(Array.isArray(v) && v.length) c++; }
+        else if(q.type==="rating"){ if(typeof v==="number") c++; }
+        else if(q.type==="textarea"){ if(typeof v==="string" && v.trim()) c++; }
+        else { if(typeof v==="string" && v) c++; }
+      }
+      answeredCount.textContent = String(c);
+
+      backBtn.disabled = idx === 0;
+      nextBtn.textContent = (idx === total - 1) ? t("finish") : t("next");
+    }
+
+    function validateCurrent(){
+      const q = SURVEY.questions[state.step];
+      if(!q.required) return true;
+      const v = state.answers[q.id];
+
+      if(q.type==="multi") return Array.isArray(v) && v.length > 0;
+      if(q.type==="rating") return typeof v === "number";
+      if(q.type==="textarea") return (typeof v === "string" && v.trim().length > 0);
+      return typeof v === "string" && v.length > 0;
+    }
+
+    function render(){
+      if(state.completedAt){
+        surveyCard.style.display = "none";
+        summaryCard.style.display = "";
+        return;
+      }
+
+      updateProgress();
+      setNetworkBadge();
+
+      const q = SURVEY.questions[state.step];
+      const requiredTag = q.required ? ` <span style="color:#ffd6de">(${t("required")})</span>` : "";
+
+      contentEl.innerHTML = `
+        <h2 class="qTitle">${escapeHtml(qText(q.title))}${requiredTag}</h2>
+        <p class="qHint">${escapeHtml(qText(q.hint || {en:""}))}</p>
+        <div id="qBody"></div>
+        <div id="validationMsg" style="display:none;color:#ffd6de;margin-top:10px;font-size:12px;"></div>
+      `;
+
+      const body = document.getElementById("qBody");
+      const current = state.answers[q.id];
+
+      if(q.type === "single"){
+        body.className = "options";
+        body.innerHTML = qOptions(q).map(opt=>{
+          const checked = (current === opt) ? "checked" : "";
+          return `
+            <label class="opt">
+              <input type="radio" name="${q.id}" value="${escapeAttr(opt)}" ${checked}/>
+              <span>${escapeHtml(opt)}</span>
+            </label>
+          `;
+        }).join("");
+
+        body.querySelectorAll("input[type=radio]").forEach(r=>{
+          r.addEventListener("change", ()=>{
+            state.answers[q.id] = r.value;
+            saveState();
+            updateProgress();
+          });
+        });
+      }
+
+      if(q.type === "multi"){
+        body.className = "options";
+        const set = new Set(Array.isArray(current) ? current : []);
+        body.innerHTML = qOptions(q).map(opt=>{
+          const checked = set.has(opt) ? "checked" : "";
+          return `
+            <label class="opt">
+              <input type="checkbox" value="${escapeAttr(opt)}" ${checked}/>
+              <span>${escapeHtml(opt)}</span>
+            </label>
+          `;
+        }).join("");
+
+        body.querySelectorAll("input[type=checkbox]").forEach(chk=>{
+          chk.addEventListener("change", ()=>{
+            const selected = Array.from(body.querySelectorAll("input[type=checkbox]"))
+              .filter(x=>x.checked).map(x=>x.value);
+
+            if(q.maxPick && selected.length > q.maxPick){
+              chk.checked = false;
+              flash(t("maxPick", q.maxPick));
+              return;
+            }
+
+            state.answers[q.id] = selected;
+            saveState();
+            updateProgress();
+          });
+        });
+      }
+
+      if(q.type === "rating"){
+        const max = q.max || 5;
+        const cur = (typeof current === "number") ? current : null;
+        body.innerHTML = `
+          <div class="ratingRow">
+            ${Array.from({length:max}, (_,i)=>{
+              const n = i+1;
+              const sel = (cur===n) ? "selected" : "";
+              return `<button type="button" class="ratingBtn ${sel}" data-n="${n}">${n}</button>`;
+            }).join("")}
+          </div>
+        `;
+        body.querySelectorAll(".ratingBtn").forEach(btn=>{
+          btn.addEventListener("click", ()=>{
+            state.answers[q.id] = Number(btn.dataset.n);
+            saveState();
+            render();
+          });
+        });
+      }
+
+      if(q.type === "select"){
+        const opts = qOptions(q);
+        body.innerHTML = `
+          <select id="selectBox">
+            <option value="">${escapeHtml(t("select"))}</option>
+            ${opts.map(opt=> `<option value="${escapeAttr(opt)}">${escapeHtml(opt)}</option>`).join("")}
+          </select>
+        `;
+        const sel = document.getElementById("selectBox");
+        sel.value = (typeof current === "string") ? current : "";
+        sel.addEventListener("change", ()=>{
+          state.answers[q.id] = sel.value;
+          saveState();
+          updateProgress();
+        });
+      }
+
+      if(q.type === "textarea"){
+        const placeholder = q.placeholder?.[lang] ?? q.placeholder?.en ?? "";
+        body.innerHTML = `<textarea id="textBox" placeholder="${escapeAttr(placeholder)}"></textarea>`;
+        const tb = document.getElementById("textBox");
+        tb.value = (typeof current === "string") ? current : "";
+        tb.addEventListener("input", ()=>{
+          state.answers[q.id] = tb.value;
+          saveState();
+        });
+      }
+    }
+
+    function buildPayload(){
+      return {
+        surveyId: SURVEY.id,
+        language: lang,
+        startedAt: state.startedAt,
+        completedAt: state.completedAt,
+        answers: state.answers,
+        meta: {
+          online: navigator.onLine,
+          userAgent: navigator.userAgent,
+          tz: Intl.DateTimeFormat().resolvedOptions().timeZone || null
+        }
+      };
+    }
+
+    async function submitToFirestore(payload){
+      const ref = await addDoc(collection(db, "responses"), {
+        ...payload,
+        createdAt: serverTimestamp()
+      });
+      return ref.id;
+    }
+
+    backBtn.addEventListener("click", ()=>{
+      if(state.step > 0){
+        state.step -= 1;
+        saveState();
+        render();
+      }
+    });
+
+    nextBtn.addEventListener("click", async ()=>{
+      const msgEl = document.getElementById("validationMsg");
+      const q = SURVEY.questions[state.step];
+
+      if(q.required && !validateCurrent()){
+        msgEl.textContent = t("mustAnswer");
+        msgEl.style.display = "block";
+        return;
+      }else{
+        msgEl.style.display = "none";
+      }
+
+      const last = SURVEY.questions.length - 1;
+      if(state.step < last){
+        state.step += 1;
+        saveState();
+        render();
+        return;
+      }
+
+      state.completedAt = new Date().toISOString();
+      saveState();
+
+      const payload = buildPayload();
+      jsonOut.textContent = JSON.stringify(payload, null, 2);
+
+      surveyCard.style.display = "none";
+      summaryCard.style.display = "";
+      warnBox.style.display = "none";
+
+      if(!navigator.onLine){
+        warnBox.textContent = t("warnOffline");
+        warnBox.style.display = "block";
+        return;
+      }
+
+      flash(t("sending"));
+      try{
+        const id = await submitToFirestore(payload);
+        flash(t("sent", id));
+      }catch(e){
+        console.error(e);
+        warnBox.textContent = t("warnFail");
+        warnBox.style.display = "block";
+      }
+    });
+
+    resetBtn.addEventListener("click", ()=>{
+      if(!confirm(t("confirmReset"))) return;
+      state = { step:0, answers:{}, startedAt:new Date().toISOString(), completedAt:null };
+      clearState();
+      saveState();
+      summaryCard.style.display="none";
+      surveyCard.style.display="";
+      render();
+    });
+
+    restartBtn.addEventListener("click", ()=>{
+      state = { step:0, answers:{}, startedAt:new Date().toISOString(), completedAt:null };
+      clearState();
+      saveState();
+      summaryCard.style.display="none";
+      surveyCard.style.display="";
+      render();
+    });
+
+    downloadBtn.addEventListener("click", ()=>{
+      const payload = buildPayload();
+      const blob = new Blob([JSON.stringify(payload, null, 2)], {type:"application/json"});
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `${SURVEY.id}_response_${lang}.json`;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      URL.revokeObjectURL(url);
+    });
+
+    langSelect.addEventListener("change", ()=>{
+      lang = langSelect.value;
+      applyLang();
+    });
+
+    loadState();
+    langSelect.value = lang;
+    applyLang();
+
+    // ✅ Service Worker
+    if ("serviceWorker" in navigator) {
+      navigator.serviceWorker.register("./sw.js").catch(console.warn);
+    }
+  </script>
+</body>
+</html>
